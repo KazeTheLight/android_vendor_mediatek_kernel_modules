@@ -2164,9 +2164,16 @@ int mtk_cfg80211_external_auth(struct wiphy *wiphy,
 			params->pmkid[14], params->pmkid[15]);
 #endif
 
+	kalMemZero(&auth, sizeof(auth));
 	COPY_MAC_ADDR(auth.bssid, params->bssid);
 	auth.status = params->status;
 	auth.ucBssIdx = wlanGetBssIdx(ndev);
+#if (KERNEL_VERSION(5, 1, 0) <= CFG80211_VERSION_CODE)
+	if (params->pmkid) {
+		kalMemCopy(auth.pmkid, params->pmkid, IW_PMKID_LEN);
+		auth.fgPmkidValid = TRUE;
+	}
+#endif
 	rStatus = kalIoctl(prGlueInfo, wlanoidExternalAuthDone, (void *)&auth,
 			   sizeof(auth), &u4BufLen);
 	if (rStatus != WLAN_STATUS_SUCCESS)

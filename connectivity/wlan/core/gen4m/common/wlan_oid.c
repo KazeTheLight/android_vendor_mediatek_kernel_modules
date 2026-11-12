@@ -17378,6 +17378,7 @@ wlanoidExternalAuthDone(struct ADAPTER *prAdapter,
 	struct STA_RECORD *prStaRec;
 	uint8_t ucBssIndex = 0;
 	struct PARAM_EXTERNAL_AUTH *params;
+	struct PARAM_PMKID rPmkid;
 	struct MSG_SAA_EXTERNAL_AUTH_DONE *prExternalAuthMsg = NULL;
 
 	if (u4SetBufferLen < sizeof(struct PARAM_EXTERNAL_AUTH)) {
@@ -17431,6 +17432,21 @@ wlanoidExternalAuthDone(struct ADAPTER *prAdapter,
 		       MAC2STR(params->bssid));
 		cnmMemFree(prAdapter, prExternalAuthMsg);
 		return WLAN_STATUS_INVALID_DATA;
+	}
+
+	if (params->status == WLAN_STATUS_SUCCESS && params->fgPmkidValid) {
+		kalMemZero(&rPmkid, sizeof(rPmkid));
+		COPY_MAC_ADDR(rPmkid.arBSSID, params->bssid);
+		kalMemCopy(rPmkid.arPMKID, params->pmkid, IW_PMKID_LEN);
+		rPmkid.ucBssIdx = ucBssIndex;
+		if (rsnSetPmkid(prAdapter, &rPmkid) == WLAN_STATUS_SUCCESS)
+			DBGLOG(REQ, INFO,
+			       "SAE PMKID cached for "MACSTR"\n",
+			       MAC2STR(params->bssid));
+		else
+			DBGLOG(REQ, WARN,
+			       "SAE PMKID cache failed for "MACSTR"\n",
+			       MAC2STR(params->bssid));
 	}
 
 	prExternalAuthMsg->rMsgHdr.eMsgId = MID_OID_SAA_FSM_EXTERNAL_AUTH;

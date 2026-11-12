@@ -421,6 +421,8 @@ struct PARAM_EXTERNAL_AUTH {
 	uint8_t bssid[PARAM_MAC_ADDR_LEN];
 	uint16_t status;
 	uint8_t ucBssIdx;
+	uint8_t pmkid[IW_PMKID_LEN];
+	uint8_t fgPmkidValid;
 };
 
 struct PARAM_OP_MODE {
